@@ -2,8 +2,9 @@
   "name": "mallard-proxy",
   "version": "1.0.0",
   "description": "The mallard proxy works as a proxy between the clients and your software. It duplicates requests for you and then compares the results so that you can make sure all of your software versions return the same results for the same requests.",
-  "main": "index.js",
+  "main": "src/index.ts",
   "scripts": {
+    "start": "ts-node ./src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -14,8 +15,11 @@
   "author": "Vincent Luedtke",
   "license": "ISC",
   "dependencies": {
+    "@types/express": "^4.17.13",
     "@types/node": "^16.10.3",
-    "express": "^4.17.1",
     "mongodb": "^4.1.3"
+  },
+  "devDependencies": {
+    "ts-node": "^10.3.0"
   }
 }
