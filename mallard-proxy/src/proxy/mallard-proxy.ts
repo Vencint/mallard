@@ -2,8 +2,7 @@ import {MallardDbService} from "../db/mallard-db-service";
 import {Server} from "../models/Server";
 import {MallardProxyEvents} from "../events/mallard-proxy-events";
 import * as http from "http";
-import {Request, Response} from "express";
-import {RequestOptions} from "http";
+import {IncomingMessage, RequestOptions, ServerResponse} from "http";
 import {MallardProxyEventEmitter} from "../events/mallard-proxy-event-emitter";
 
 export class MallardProxy {
@@ -22,26 +21,31 @@ export class MallardProxy {
 
     /**
      * Handles a request to the mallard proxy, duplicates it and then forwards them.
-     * @param clientRequest request object
-     * @param clientResponse response object
+     * @param incomingMessage request object
+     * @param serverResponse response object
      */
-    public handleProxyRequest = (clientRequest: Request, clientResponse: Response): void => {
+    public handleProxyRequest = (incomingMessage: IncomingMessage, serverResponse: ServerResponse): void => {
         if (this.actual === undefined) {
             console.log('no actual');
-            clientResponse.end();
+            serverResponse.end();
             return;
         }
 
         if (!this.mallardProxyActive) {
-            clientResponse.status(503).send('Mallard is currently not available.');
+            serverResponse.writeHead(503);
+            serverResponse.write('Mallard is currently not available.');
+            serverResponse.end();
             return;
         }
 
-        console.debug(`DEBUG: request '${clientRequest.url}' - actual '${this.actual.path}' - duplicates '${this.duplicates.map(d => d.path)}'`);
+        console.debug(`DEBUG: request '${incomingMessage.url}' - actual '${this.actual.path}' - duplicates '${this.duplicates.map(d => d.path)}'`);
 
-        this.doRequest(this.actual, this.actual.path + clientRequest.url, res => clientResponse.send(res));
+        this.doRequest(this.actual, this.actual.path + (incomingMessage.url || ''), res => {
+            serverResponse.write(res);
+            serverResponse.end();
+        });
         this.duplicates.forEach(
-            duplicate => this.doRequest(duplicate, duplicate.path + clientRequest.url, () => {
+            duplicate => this.doRequest(duplicate, duplicate.path + (incomingMessage.url || ''), () => {
             })
         );
     }
