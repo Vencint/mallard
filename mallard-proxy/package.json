@@ -15,7 +15,6 @@
   "author": "Vincent Luedtke",
   "license": "ISC",
   "dependencies": {
-    "@types/express": "^4.17.13",
     "@types/node": "^16.10.3",
     "mongodb": "^4.1.3"
   },
