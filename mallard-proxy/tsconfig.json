@@ -1,24 +1,14 @@
 {
   "compilerOptions": {
-    /* Language and Environment */
+    "experimentalDecorators": true,
     "target": "es6",
-
-    /* Modules */
     "module": "commonjs",
     "rootDir": "./src",
     "moduleResolution": "node",
-
-    /* Emit */
     "outDir": "./dist",
-
-    /* Interop Constraints */
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-
-    /* Type Checking */
     "strict": true,
-
-    /* Completeness */
     "skipLibCheck": true
   }
 }
