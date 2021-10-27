@@ -48,7 +48,7 @@ describe('MallardProcessor', () => {
         });
 
         it('should update port if preferences are set', (done) => {
-            const newPort = 1;
+            const newPort = '1';
             const mallardCache = <MallardCache>{
                 getRequestOptions: (id: number) => new Promise(resolve => resolve({port: newPort}))
             };
