@@ -24,14 +24,15 @@ export class MallardCache {
     }
 
     /**
-     * Sets {@link RequestOptions requestOptions} for a server. Errors are not caught and have to be taken care of by
-     * the caller.
+     * Sets a field in {@link RequestOptions requestOptions} for a server. Errors are not caught and have to be taken
+     * care of by the caller.
      * @param id server to be updated
-     * @param newRequestOptions new options to be set for server
-     * @return promise that resolves when updated
+     * @param key name of field to update in request options
+     * @param value new value for field
+     * @return promise resolving with number of fields that were __added__
      */
-    public readonly setRequestOptions = (id: number, newRequestOptions: RequestOptions): Promise<unknown> =>
-        promisify(this.redisClient.set).bind(this.redisClient)(`server:${id}`, JSON.stringify(newRequestOptions));
+    public readonly setRequestOption = (id: number, key: keyof RequestOptions, value: string): Promise<number> =>
+        promisify(this.redisClient.hset).bind(this.redisClient)([`server:${id}`, key, value]);
 
     /**
      * Gets {@link RequestOptions requestOptions} for a server. Errors are not caught and have to be taken care of by
@@ -40,19 +41,6 @@ export class MallardCache {
      * @return promise that resolves with options if found otherwise `null`
      */
     public readonly getRequestOptions = (id: number): Promise<RequestOptions | null> =>
-        promisify(this.redisClient.get).bind(this.redisClient)(`server:${id}`)
-            .then(MallardCache.stringToRequestOptions);
-
-    /**
-     * Helper function to convert a JSON string to {@link RequestOptions}.
-     * @param val string value to be converted
-     * @return request options if successful otherwise `null`
-     * @private
-     */
-    private static stringToRequestOptions(val: string | null): RequestOptions | null {
-        return !!val ?
-            JSON.parse(val) as RequestOptions :
-            null;
-    }
+        promisify(this.redisClient.hgetall).bind(this.redisClient)(`server:${id}`);
 
 }
