@@ -8,7 +8,8 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - run: cd mallard-proxy
+      - run: ls
+      - run: cd no-directory
       - run: pwd
       - run: npm clean-install
       - run: npm run test
