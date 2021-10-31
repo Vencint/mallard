@@ -1,6 +1,7 @@
 import http, {ClientRequest, IncomingMessage, RequestOptions, ServerResponse} from "http";
 import {MallardProxy} from "./mallard-proxy";
-import {MallardProcessor} from "../processors/mallard-processor";
+import {MallardActualProcessor} from "../processors/mallard-actual-processor";
+import {MallardDuplicatesProcessor} from "../processors/mallard-duplicates-processor";
 
 jest.mock('http', () => ({
     request: jest.fn()
@@ -21,10 +22,13 @@ describe('MallardProxy', () => {
 
         it('should execute an http request with request options returned by the processor', (done) => {
             const requestOptions = <RequestOptions>{path: '/path'};
-            const mallardProcessor = <MallardProcessor>{
+            const mallardActualProcessor = <MallardActualProcessor>{
                 process: (options: RequestOptions): Promise<RequestOptions> => new Promise<RequestOptions>(resolve => resolve(requestOptions))
             };
-            const mallardProxy = new MallardProxy(mallardProcessor);
+            const mallardDuplicatesProcessor = <MallardDuplicatesProcessor>{
+                process: (options: RequestOptions): Promise<RequestOptions[]> => new Promise<RequestOptions[]>(resolve => resolve([]))
+            }
+            const mallardProxy = new MallardProxy(mallardActualProcessor, mallardDuplicatesProcessor);
 
             mallardProxy.handleRequest(<IncomingMessage>{}, <ServerResponse>{
                 write: (chunk: any, callback?: (error: (Error | null | undefined)) => void): boolean => true,

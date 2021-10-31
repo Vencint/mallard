@@ -1,6 +1,7 @@
 import {IncomingMessage, RequestOptions, ServerResponse} from "http";
 import * as http from "http";
-import {MallardProcessor} from "../processors/mallard-processor";
+import {MallardActualProcessor} from "../processors/mallard-actual-processor";
+import {MallardDuplicatesProcessor} from "../processors/mallard-duplicates-processor";
 
 /**
  * This class takes care of incoming requests. It processes them with the help of processors and the directs them to an
@@ -11,9 +12,13 @@ export class MallardProxy {
 
     /**
      * @see MallardProxy
-     * @param actualProcessor initial processor for actual to begin with; the proxy cannot start without an actual
+     * @param actualProcessor processor to process request options for actual server
+     * @param duplicatesProcessor processor to process request options for potential duplicate servers
      */
-    constructor(private actualProcessor: MallardProcessor) {
+    constructor(
+        private actualProcessor: MallardActualProcessor,
+        private duplicatesProcessor: MallardDuplicatesProcessor
+    ) {
     }
 
     /**
@@ -23,13 +28,17 @@ export class MallardProxy {
      * @param res response to send to the caller
      */
     public handleRequest = (req: IncomingMessage, res: ServerResponse): Promise<void> => {
-        return this.actualProcessor
+        const actual = this.actualProcessor
             .process(MallardProxy.createRequestOptions(req))
             .then(httpRequest);
 
-        function httpRequest(requestOptions: RequestOptions) {
+        const duplicates = this.duplicatesProcessor
+            .process(MallardProxy.createRequestOptions(req))
+            .then(httpRequests);
+
+        function httpRequest(requestOption: RequestOptions): void {
             http
-                .request(requestOptions, httpRes => {
+                .request(requestOption, httpRes => {
                     let response = '';
                     httpRes.on('data', chunk => response += chunk);
                     httpRes.on('end', () => {
@@ -40,6 +49,23 @@ export class MallardProxy {
                 .on('error', console.error)
                 .end();
         }
+
+        function httpRequests(requestOptions: RequestOptions[]): void {
+            requestOptions.forEach(requestOption => {
+                http
+                    .request(requestOption, httpRes => {
+                        let response = '';
+                        httpRes.on('data', chunk => response += chunk);
+                        httpRes.on('end', () => {
+                            // TODO
+                        });
+                    })
+                    .on('error', console.error)
+                    .end();
+            });
+        }
+
+        return Promise.all([actual, duplicates]).then();
     }
 
     /**

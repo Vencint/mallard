@@ -10,16 +10,18 @@ import {MallardEmitter} from "./events/mallard-emitter";
 import {MallardEventNamesEnum} from "./events/mallard-event-names.enum";
 import {MallardEvent} from "./events/mallard-event";
 import {MallardPathInterface} from "./models/mallard-path.interface";
-import {MallardProcessor} from "./processors/mallard-processor";
+import {MallardActualProcessor} from "./processors/mallard-actual-processor";
 import {MallardCache} from "./cache/mallard-cache";
+import {MallardDuplicatesProcessor} from "./processors/mallard-duplicates-processor";
 
 const PORT = process.env.MALLARD_PORT || 6338
 
 const mallardEmitter = new MallardEmitter();
 const mallardCache = new MallardCache();
 const mallardReducer = new MallardReducer(mallardCache);
-const mallardProcessor = new MallardProcessor(1, mallardCache);
-const mallardProxy = new MallardProxy(mallardProcessor);
+const mallardActualProcessor = new MallardActualProcessor(mallardCache);
+const mallardDuplicatesProcessor = new MallardDuplicatesProcessor(mallardCache);
+const mallardProxy = new MallardProxy(mallardActualProcessor, mallardDuplicatesProcessor);
 
 http
     .createServer(mallardProxy.handleRequest)
@@ -30,6 +32,7 @@ http
 mallardEmitter
     .on(MallardEventNamesEnum.path, mallardReducer.updatePath);
 
+/*
 mallardEmitter
     .emit(MallardEventNamesEnum.path, <MallardEvent<MallardPathInterface>>{
         payload: {
@@ -37,3 +40,4 @@ mallardEmitter
             path: '/v1/test1'
         }
     });
+ */
