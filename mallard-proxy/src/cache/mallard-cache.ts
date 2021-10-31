@@ -29,7 +29,7 @@ export class MallardCache {
      * @param id server to be updated
      * @param key name of field to update in request options
      * @param value new value for field
-     * @return promise resolving with number of fields that were __added__
+     * @return number of fields that were __added__
      */
     public readonly setRequestOption = (id: number, key: keyof RequestOptions, value: string): Promise<number> =>
         promisify(this.redisClient.hset).bind(this.redisClient)([`server:${id}`, key, value]);
@@ -38,9 +38,22 @@ export class MallardCache {
      * Gets {@link RequestOptions requestOptions} for a server. Errors are not caught and have to be taken care of by
      * the caller.
      * @param id server to get options from
-     * @return promise that resolves with options if found otherwise `null`
+     * @return options if found otherwise `null`
      */
-    public readonly getRequestOptions = (id: number): Promise<RequestOptions | null> =>
+    public readonly getRequestOptions = (id: string): Promise<RequestOptions | null> =>
         promisify(this.redisClient.hgetall).bind(this.redisClient)(`server:${id}`);
 
+    /**
+     * Gets the id of the actual server. Errors are not caught.
+     * @return id of actual server or null if not found
+     */
+    public readonly getActual = (): Promise<string | null> =>
+        promisify(this.redisClient.get).bind(this.redisClient)('actual');
+
+    /**
+     * Gets the ids of all the duplicate servers.
+     * @return array (possibly empty) of ids of all duplicate servers
+     */
+    public readonly getDuplicates = (): Promise<string[]> =>
+        promisify(this.redisClient.lrange).bind(this.redisClient)('duplicates', 0, -1);
 }
